@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.40.0 -->
+<!-- Prime Factorization UI with Advanced Settings -->
+<interface>
+  <requires lib="gtk+" version="3.24"/>
+  <object class="GtkApplicationWindow" id="entry_window">
+    <property name="can-focus">False</property>
+    <property name="title">RSAlite Prime Factorization</property>
+    <property name="default-width">480</property>
+    <property name="default-height">380</property>
+    <child>
+      <!-- n-columns=3 n-rows=8 -->
+      <object class="GtkGrid" id="entry_grid">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="margin-start">12</property>
+        <property name="margin-end">12</property>
+        <property name="margin-top">12</property>
+        <property name="margin-bottom">12</property>
+        <property name="row-spacing">12</property>
+        <property name="column-spacing">12</property>
+        <child>
+          <object class="GtkEntry" id="entry_display">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="width-chars">15</property>
+            <property name="xalign">0.5</property>
+            <property name="placeholder-text" translatable="yes">Enter number</property>
+            <property name="input-purpose">number</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">0</property>
+            <property name="width">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow" id="result_scroller">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="GtkTextView" id="result_output">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="editable">False</property>
+                <property name="wrap-mode">word</property>
+                <property name="cursor-visible">False</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">1</property>
+            <property name="width">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="trial_division_button">
+            <property name="label" translatable="yes">Trial Division</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="square_root_button">
+            <property name="label" translatable="yes">Square Root</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="whee_factorization_button">
+            <property name="label" translatable="yes">Wheel Factorization</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="sieve_of_eratosthenes_button">
+            <property name="label" translatable="yes">Sieve of Eratosthenes</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="fermats_primality_test_button">
+            <property name="label" translatable="yes">Fermat's Primality Test</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="pollards_rho_button">
+            <property name="label" translatable="yes">Pollard's Rho</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="label" translatable="yes">Optimization &amp; Settings</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">4</property>
+            <property name="width">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="simd_toggle">
+            <property name="label" translatable="yes">SIMD Off</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="mt_toggle">
+            <property name="label" translatable="yes">Multi-Threading Off</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="gpu_button">
+            <property name="label" translatable="yes">GPU Mode (Coming Soon)</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="benchmark_button">
+            <property name="label" translatable="yes">Benchmark Mode</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">6</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="rsa_reverse_button">
+            <property name="label" translatable="yes">RSA Reverse (Coming Soon)</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">6</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="coming_soon_button">
+            <property name="label" translatable="yes">Coming Soon</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="sensitive">False</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">6</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="clear_button">
+            <property name="label" translatable="yes">Clear</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">7</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="factor_button">
+            <property name="label" translatable="yes">Factor</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">7</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="quit_button">
+            <property name="label" translatable="yes">Quit</property>
+            <property name="width-request">150</property>
+            <property name="height-request">40</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="receives-default">False</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">7</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

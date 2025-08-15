@@ -1,0 +1,12 @@
+# Ignore build output
+build/
+*.o
+*.out
+*.exe
+
+# Glade temp files
+*~
+
+# OS junk
+.DS_Store
+Thumbs.db
