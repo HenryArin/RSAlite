@@ -27,7 +27,7 @@
             <property name="xalign">0.5</property>
             <property name="placeholder-text" translatable="yes">Enter number</property>
             <property name="input-purpose">number</property>
-            <signal name="insert-text" handler="on_entry_insert_text&#10;" swapped="no"/>
+            <!-- <signal name="insert-text" handler="on_entry_insert_text&#10;" swapped="no"/> -->
           </object>
           <packing>
             <property name="left-attach">0</property>

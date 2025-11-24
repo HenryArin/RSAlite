@@ -4,6 +4,7 @@ using primality checks from prime.c*/
 #include <stdio.h>
 #include "factor.h"
 #include "prime.h"
+#include <limits.h>
 
 /*
 int get_factors(int x, void (*callback)(int)) {
