@@ -1,8 +1,8 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -std=c11 -g
 
-# object files we actually need right now
-OBJS    = main.o prime.o
+# object files we actually need 
+OBJS    = main.o prime.o factor.o
 
 TARGET  = rsalite
 
@@ -16,6 +16,10 @@ main.o: main.c prime.h
 
 prime.o: prime.c prime.h
 	$(CC) $(CFLAGS) -c prime.c
+
+factor.o: factor.c factor.h prime.h
+	$(CC) $(CFLAGS) -c factor.c
+
 
 clean:
 	rm -f $(OBJS) $(TARGET)
