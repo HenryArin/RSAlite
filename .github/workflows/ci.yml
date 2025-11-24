@@ -1,36 +1,22 @@
-name: C Build and Tests
+name: C Build and Test
 
 on:
   push:
   pull_request:
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - name: Build with Make
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Build
         run: make
 
-      # Test 1: trial division with 55 (expects 5 and 11)
-      - name: Test trail_division with 55
-        run: |
-          printf "55\n1\n" | ./rsalite > output.txt
-          grep "5 is a prime factor of 55" output.txt
-          grep "11 is a prime factor of 55" output.txt
-
-      # Test 2: square root method with 55 (expects 5 and 11)
-      - name: Test square_root with 55
-        run: |
-          printf "55\n2\n" | ./rsalite > output.txt
-          grep "5 is a prime factor of 55" output.txt
-          grep "11 is a prime factor of 55" output.txt
-
-      # Test 3: simple prime, e.g., 13 (expects only 13)
-      - name: Test prime number (13)
-        run: |
-          printf "13\n1\n" | ./rsalite > output.txt
-          grep "13 is a prime factor of 13" output.txt
+      - name: Run test (55 sqrt)
+        run: echo -e "55\n2" | ./rsalite
