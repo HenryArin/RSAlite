@@ -4,7 +4,8 @@
 #include "prime.h"
 #include <limits.h>
 
-typedef struct {
+typedef struct
+{
     GtkWidget *window;
     GtkWidget *entry;
     GtkWidget *result_view;
@@ -13,7 +14,6 @@ typedef struct {
     GtkWidget *trial_button;
     GtkWidget *sqrt_button;
 } AppWidgets;
-
 
 static void on_entry_insert_text(GtkEditable *editable,
                                  const gchar *text,
@@ -32,7 +32,8 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     GtkBuilder *builder = gtk_builder_new_from_file("ui/interface.glade");
     GtkWidget *window = GTK_WIDGET(gtk_builder_get_object(builder, "entry_window"));
 
-    if (!window) {
+    if (!window)
+    {
         g_printerr("Could not find 'entry_window' in interface.glade\n");
         g_object_unref(builder);
         return;
@@ -43,12 +44,12 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     w->entry = GTK_WIDGET(gtk_builder_get_object(builder, "entry_display"));
     w->result_view = GTK_WIDGET(gtk_builder_get_object(builder, "result_output"));
 
-    GtkWidget *factor_button  = GTK_WIDGET(gtk_builder_get_object(builder, "factor_button"));
-    GtkWidget *clear_button   = GTK_WIDGET(gtk_builder_get_object(builder, "clear_button"));
-    GtkWidget *quit_button    = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
+    GtkWidget *factor_button = GTK_WIDGET(gtk_builder_get_object(builder, "factor_button"));
+    GtkWidget *clear_button = GTK_WIDGET(gtk_builder_get_object(builder, "clear_button"));
+    GtkWidget *quit_button = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
 
     w->trial_button = GTK_WIDGET(gtk_builder_get_object(builder, "trial_division_button"));
-    w->sqrt_button  = GTK_WIDGET(gtk_builder_get_object(builder, "square_root_button"));
+    w->sqrt_button = GTK_WIDGET(gtk_builder_get_object(builder, "square_root_button"));
 
     w->method = FACTOR_METHOD_TRAIL;
 
@@ -88,15 +89,16 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     g_object_unref(builder);
 }
 
-
 static void on_entry_insert_text(GtkEditable *editable,
                                  const gchar *text,
                                  gint length,
                                  gint *position,
                                  gpointer user_data)
 {
-    for (int i = 0; i < length; i++) {
-        if (!g_ascii_isdigit(text[i])) {
+    for (int i = 0; i < length; i++)
+    {
+        if (!g_ascii_isdigit(text[i]))
+        {
             g_signal_stop_emission_by_name(editable, "insert-text");
             return;
         }
@@ -109,19 +111,22 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
     const gchar *text = gtk_entry_get_text(GTK_ENTRY(w->entry));
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(w->result_view));
 
-    if (text[0] == '\0') {
+    if (text[0] == '\0')
+    {
         gtk_text_buffer_set_text(buffer, "Please enter a number.\n", -1);
         return;
     }
 
     gchar *endptr = NULL;
     unsigned long long n64 = g_ascii_strtoull(text, &endptr, 10);
-    if (endptr == text || *endptr != '\0') {
+    if (endptr == text || *endptr != '\0')
+    {
         gtk_text_buffer_set_text(buffer, "Invalid number.\n", -1);
         return;
     }
 
-    if (n64 <= 1 || n64 > INT32_MAX) {
+    if (n64 <= 1 || n64 > INT32_MAX)
+    {
         gtk_text_buffer_set_text(buffer, "Number out of supported range.\n", -1);
         return;
     }
@@ -130,17 +135,34 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
 
     int factors[64];
     int count = factor_number(n, w->method, factors, 64);
-    if (count <= 0) {
+    if (count <= 0)
+    {
         gtk_text_buffer_set_text(buffer, "Number is prime or cannot be factored.\n", -1);
         return;
     }
+    const char *method_name = NULL;
+    switch (w->method)
+    {
+    case FACTOR_METHOD_TRAIL:
+        method_name = "Trial Division";
+        break;
+    case FACTOR_METHOD_SQRT:
+        method_name = "Square Root";
+        break;
+    default:
+        method_name = "Unknown";
+        break;
+    }
 
     GString *out = g_string_new(NULL);
+    g_string_append_printf(out, "Method: %s\n", method_name);
     g_string_append_printf(out, "%d = ", n);
 
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++)
+    {
         g_string_append_printf(out, "%d", factors[i]);
-        if (i < count - 1) {
+        if (i < count - 1)
+        {
             g_string_append(out, " × ");
         }
     }

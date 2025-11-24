@@ -56,9 +56,11 @@ int factor_number(int n, FactorMethod method, int *factors, int max_factors)
 {
     switch (method) {
         case FACTOR_METHOD_TRAIL:
+            printf("DEBUG: using Trial Division\n");
             return factor_with_trail(n, factors, max_factors);
 
         case FACTOR_METHOD_SQRT:
+            printf("DEBUG: using Square Root\n");
             return factor_with_sqrt(n, factors, max_factors);
 
         // TODO: add Pollard Rho here later
@@ -66,6 +68,7 @@ int factor_number(int n, FactorMethod method, int *factors, int max_factors)
         //     return factor_with_pollard(n, factors, max_factors);
 
         default:
+            printf("DEBUG: unknown method\n");
             return 0;
     }
 }
