@@ -21,11 +21,17 @@ int factor_with_sqrt(int n, int *factors, int max_factors)
 {
     int count = 0;
 
-    for (int j = 1; j <= n; j++) {
+    for (int j = 1; j * j <= n; j++) {
         if (n % j == 0) {
             if (is_prime_sqrt(j)) {
                 if (count < max_factors) {
                     factors[count++] = j;
+                }
+            }
+            int k = n / j;
+            if (k != j && is_prime_sqrt(k)) {
+                if (count < max_factors) {
+                    factors[count++] = k;
                 }
             }
         }
@@ -33,6 +39,7 @@ int factor_with_sqrt(int n, int *factors, int max_factors)
 
     return count;
 }
+
 
 int factor_with_trail(int n, int *factors, int max_factors)
 {
