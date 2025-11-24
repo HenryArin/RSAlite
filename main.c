@@ -13,27 +13,27 @@ int main() {
 
 	printf("enter 1 for trail division method enter 2 for square root method\n");
 	scanf("%d",&method);
-	if (method == 1) {
-    int factors[64];
-    int count = factor_with_sqrt(x, factors, 64);
 
-    printf("Prime factors of %d (trial method, using sqrt for now):\n", x);
-    for (int i = 0; i < count; i++) {
-        printf("%d\n", factors[i]);
-    }
+	FactorMethod selected_method;
+
+	if (method == 1) {
+		selected_method = FACTOR_METHOD_TRAIL;
 	} else if (method == 2) {
-		int factors[64];
-    int count = factor_with_sqrt(x, factors, 64);
+		selected_method = FACTOR_METHOD_SQRT;
+	} else {
+		printf("Invalid method selected.\n");
+		return 1;
+	}
+    
+	int factors[64];
+    int count = factor_number(x, selected_method, factors, 64);
+
 
     printf("Prime factors of %d (sqrt method):\n", x);
     for (int i = 0; i < count; i++) {
         printf("%d\n", factors[i]);
     }
-	} else {
-		return 1;
-	}
 	return 0;
-
 }
 
 

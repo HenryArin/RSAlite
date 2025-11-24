@@ -14,6 +14,8 @@ int get_factors(int x, void (*callback)(int)) {
 }
 }
 */
+
+
 int factor_with_sqrt(int n, int *factors, int max_factors)
 {
     int count = 0;
@@ -46,4 +48,23 @@ int factor_with_trail(int n, int *factors, int max_factors)
     }
 
     return count;
+}
+
+
+int factor_number(int n, FactorMethod method, int *factors, int max_factors)
+{
+    switch (method) {
+        case FACTOR_METHOD_TRAIL:
+            return factor_with_trail(n, factors, max_factors);
+
+        case FACTOR_METHOD_SQRT:
+            return factor_with_sqrt(n, factors, max_factors);
+
+        // TODO: add Pollard Rho here later
+        // case FACTOR_METHOD_POLLARD:
+        //     return factor_with_pollard(n, factors, max_factors);
+
+        default:
+            return 0;
+    }
 }
