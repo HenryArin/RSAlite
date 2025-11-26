@@ -11,7 +11,7 @@ int main() {
 	printf("enter a number\n");
 	scanf("%d",&x);
 
-	printf("enter 1 for trail division method enter 2 for square root method\n");
+	printf("enter 1 for trail division method enter 2 for square root method enter 3 for wheel\n");
 	scanf("%d",&method);
 
 	FactorMethod selected_method;
@@ -20,6 +20,8 @@ int main() {
 		selected_method = FACTOR_METHOD_TRAIL;
 	} else if (method == 2) {
 		selected_method = FACTOR_METHOD_SQRT;
+		} else if (method == 3) {
+		selected_method = FACTOR_METHOD_WHEEL;
 	} else {
 		printf("Invalid method selected.\n");
 		return 1;

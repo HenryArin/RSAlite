@@ -16,7 +16,6 @@ int get_factors(int x, void (*callback)(int)) {
 }
 */
 
-
 int factor_with_sqrt(int n, int *factors, int max_factors)
 {
     int count = 0;
@@ -40,7 +39,6 @@ int factor_with_sqrt(int n, int *factors, int max_factors)
     return count;
 }
 
-
 int factor_with_trail(int n, int *factors, int max_factors)
 {
     int count = 0;
@@ -58,30 +56,84 @@ int factor_with_trail(int n, int *factors, int max_factors)
     return count;
 }
 
-int factor_with_wheel(int n, int factors[], int max_factors)
+int factor_with_wheel(int n, int *factors, int max_factors)
 {
-    /* temporary: just reuse trial division */
-    return factor_with_trail(n, factors, max_factors);
+    int count = 0;
+
+    if (n <= 1) {
+        return 0;
+    }
+
+    int small_primes[] = {2, 3, 5};
+    for (int i = 0; i < 3; i++) {
+        int p = small_primes[i];
+        if (n % p == 0) {
+            if (count < max_factors) {
+                factors[count++] = p;
+            }
+            while (n % p == 0) {
+                n /= p;
+            }
+        }
+    }
+
+    if (n == 1) {
+        return count;
+    }
+
+    int residues[] = {1, 7, 11, 13, 17, 19, 23, 29};
+    int base = 30;
+    int k = 0;
+
+    for (;;) {
+        for (int i = 0; i < 8; i++) {
+            int d = base * k + residues[i];
+            if (d <= 1) {
+                continue;
+            }
+            if (d > n / d) {
+                goto done;
+            }
+            if (n % d == 0) {
+                if (is_prime_sqrt(d)) {
+                    if (count < max_factors) {
+                        factors[count++] = d;
+                    }
+                }
+                while (n % d == 0) {
+                    n /= d;
+                }
+                if (n == 1) {
+                    return count;
+                }
+            }
+        }
+        k++;
+    }
+
+done:
+    if (n > 1 && is_prime_sqrt(n)) {
+        if (count < max_factors) {
+            factors[count++] = n;
+        }
+    }
+    return count;
 }
 
 int factor_with_sieve(int n, int factors[], int max_factors)
 {
-    /* temporary: just reuse trial division */
     return factor_with_trail(n, factors, max_factors);
 }
 
 int factor_with_fermat(int n, int factors[], int max_factors)
 {
-    /* temporary: just reuse square-root method */
     return factor_with_sqrt(n, factors, max_factors);
 }
 
 int factor_with_pollard(int n, int factors[], int max_factors)
 {
-    /* temporary: just reuse square-root method */
     return factor_with_sqrt(n, factors, max_factors);
 }
-
 
 int factor_number(int n, FactorMethod method, int *factors, int max_factors)
 {
@@ -95,7 +147,7 @@ int factor_number(int n, FactorMethod method, int *factors, int max_factors)
             return factor_with_sqrt(n, factors, max_factors);
 
         case FACTOR_METHOD_WHEEL:
-            printf("DEBUG: Wheel method not implemented\n");
+            printf("DEBUG: using Wheel factorization\n");
             return factor_with_wheel(n, factors, max_factors);
         
         case FACTOR_METHOD_SIEVE:
@@ -115,3 +167,5 @@ int factor_number(int n, FactorMethod method, int *factors, int max_factors)
             return 0;
     }
 }
+
+

@@ -180,6 +180,9 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
     case FACTOR_METHOD_SQRT:
         method_name = "Square Root";
         break;
+        case FACTOR_METHOD_WHEEL:
+        method_name = "Wheel Factorization";
+        break;
     default:
         method_name = "Unknown";
         break;
