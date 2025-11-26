@@ -58,6 +58,30 @@ int factor_with_trail(int n, int *factors, int max_factors)
     return count;
 }
 
+int factor_with_wheel(int n, int factors[], int max_factors)
+{
+    /* temporary: just reuse trial division */
+    return factor_with_trail(n, factors, max_factors);
+}
+
+int factor_with_sieve(int n, int factors[], int max_factors)
+{
+    /* temporary: just reuse trial division */
+    return factor_with_trail(n, factors, max_factors);
+}
+
+int factor_with_fermat(int n, int factors[], int max_factors)
+{
+    /* temporary: just reuse square-root method */
+    return factor_with_sqrt(n, factors, max_factors);
+}
+
+int factor_with_pollard(int n, int factors[], int max_factors)
+{
+    /* temporary: just reuse square-root method */
+    return factor_with_sqrt(n, factors, max_factors);
+}
+
 
 int factor_number(int n, FactorMethod method, int *factors, int max_factors)
 {
@@ -70,9 +94,21 @@ int factor_number(int n, FactorMethod method, int *factors, int max_factors)
             printf("DEBUG: using Square Root\n");
             return factor_with_sqrt(n, factors, max_factors);
 
-        // TODO: add Pollard Rho here later
-        // case FACTOR_METHOD_POLLARD:
-        //     return factor_with_pollard(n, factors, max_factors);
+        case FACTOR_METHOD_WHEEL:
+            printf("DEBUG: Wheel method not implemented\n");
+            return factor_with_wheel(n, factors, max_factors);
+        
+        case FACTOR_METHOD_SIEVE:
+            printf("DEBUG: Sieve method not implemented\n");
+            return factor_with_sieve(n, factors, max_factors);
+
+        case FACTOR_METHOD_FERMAT:
+            printf("DEBUG: Fermat method not implemented\n");
+            return factor_with_fermat(n, factors, max_factors);
+
+        case FACTOR_METHOD_POLLARD:
+            printf("DEBUG: Pollard method not implemented\n");
+            return factor_with_pollard(n, factors, max_factors);
 
         default:
             printf("DEBUG: unknown method\n");
