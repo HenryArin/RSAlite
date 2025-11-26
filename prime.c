@@ -33,3 +33,39 @@ int is_prime_trail(int n)
 
     return 1;
 }
+
+int is_prime_wheel(int n)
+{
+    if (n <= 1) {
+        return 0;
+    }
+
+    if (n == 2 || n == 3 || n == 5) {
+        return 1;
+    }
+
+    if (n % 2 == 0 || n % 3 == 0 || n % 5 == 0) {
+        return 0;
+    }
+
+    int residues[] = {1, 7, 11, 13, 17, 19, 23, 29};
+    int base = 30;
+
+    for (int k = 0; ; k++) {
+        for (int i = 0; i < 8; i++) {
+            int d = base * k + residues[i];
+
+            if (d < 7) {
+                continue;
+            }
+
+            if (d * d > n) {
+                return 1;
+            }
+
+            if (n % d == 0) {
+                return 0;
+            }
+        }
+    }
+}

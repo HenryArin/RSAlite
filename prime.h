@@ -5,6 +5,7 @@
 
 int is_prime_sqrt(int n);
 int is_prime_trail(int n);
+int is_prime_wheel(int n);
 
 
 

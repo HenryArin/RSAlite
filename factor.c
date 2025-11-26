@@ -59,7 +59,6 @@ int factor_with_trail(int n, int *factors, int max_factors)
 int factor_with_wheel(int n, int *factors, int max_factors)
 {
     int count = 0;
-
     if (n <= 1) {
         return 0;
     }
@@ -91,18 +90,20 @@ int factor_with_wheel(int n, int *factors, int max_factors)
             if (d <= 1) {
                 continue;
             }
+
             if (d > n / d) {
                 goto done;
             }
+
             if (n % d == 0) {
-                if (is_prime_sqrt(d)) {
-                    if (count < max_factors) {
-                        factors[count++] = d;
-                    }
+                if (count < max_factors) {
+                    factors[count++] = d;
                 }
+
                 while (n % d == 0) {
                     n /= d;
                 }
+
                 if (n == 1) {
                     return count;
                 }
@@ -112,7 +113,7 @@ int factor_with_wheel(int n, int *factors, int max_factors)
     }
 
 done:
-    if (n > 1 && is_prime_sqrt(n)) {
+    if (n > 1 && is_prime_wheel(n)) {
         if (count < max_factors) {
             factors[count++] = n;
         }

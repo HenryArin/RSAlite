@@ -31,7 +31,7 @@ int main() {
     int count = factor_number(x, selected_method, factors, 64);
 
 
-    printf("Prime factors of %d (sqrt method):\n", x);
+    printf("Prime factors of %d \n", x);
     for (int i = 0; i < count; i++) {
         printf("%d\n", factors[i]);
     }
