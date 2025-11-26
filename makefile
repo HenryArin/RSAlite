@@ -18,6 +18,9 @@ factor.o: factor.c factor.h prime.h
 prime.o: prime.c prime.h
 	$(CC) $(CFLAGS) -c $<
 
+test_factor.o: test_factor.c factor.h prime.h
+	$(CC) $(CFLAGS) -c test_factor.c
+
 GTK_CFLAGS := $(shell pkg-config --cflags gtk+-3.0 2>/dev/null)
 GTK_LIBS   := $(shell pkg-config --libs gtk+-3.0 2>/dev/null)
 
@@ -26,6 +29,12 @@ rsalite-gui: $(GUI_OBJS)
 
 gui_main.o: gui_main.c factor.h prime.h
 	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c $<
+
+test: test_factor
+
+test_factor: test_factor.o factor.o prime.o
+	$(CC) $(CFLAGS) -o test_factor test_factor.o factor.o prime.o
+
 
 clean:
 	rm -f *.o rsalite rsalite-gui

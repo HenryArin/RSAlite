@@ -1,22 +1,28 @@
-name: C Build and Test
+name: RSAlite CI
 
 on:
   push:
   pull_request:
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout source
+        uses: actions/checkout@v4
 
-      - name: Install build tools
-        run: sudo apt-get update && sudo apt-get install -y build-essential
+      - name: Install GCC & build tools
+        run: sudo apt update && sudo apt install -y build-essential
 
-      - name: Build
-        run: make
+      - name: Build unit test objects
+        run: |
+          gcc -Wall -Wextra -std=c11 -g -c prime.c
+          gcc -Wall -Wextra -std=c11 -g -c factor.c
+          gcc -Wall -Wextra -std=c11 -g -c test_factor.c
 
-      - name: Run test (55 sqrt)
-        run: echo -e "55\n2" | ./rsalite
+      - name: Link test binary
+        run: gcc -Wall -Wextra -std=c11 -g -o test_factor test_factor.o factor.o prime.o
+
+      - name: Run tests
+        run: ./test_factor
