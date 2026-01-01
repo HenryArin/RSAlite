@@ -16,16 +16,38 @@ int main() {
 
 	FactorMethod selected_method;
 
-	if (method == 1) {
-		selected_method = FACTOR_METHOD_TRAIL;
-	} else if (method == 2) {
-		selected_method = FACTOR_METHOD_SQRT;
-		} else if (method == 3) {
-		selected_method = FACTOR_METHOD_WHEEL;
-	} else {
-		printf("Invalid method selected.\n");
-		return 1;
+	switch (method){
+		case 1:
+			selected_method = FACTOR_METHOD_TRAIL;
+			printf("Trial Division Method selected.\n");
+			break;
+		case 2:
+			selected_method = FACTOR_METHOD_SQRT;
+			printf("Square Root Method selected.\n");
+			break;
+		case 3:
+			selected_method = FACTOR_METHOD_WHEEL;
+			printf("Wheel Factorization Method selected.\n");
+			break;
+		case 4:
+			selected_method = FACTOR_METHOD_SIEVE;
+			printf("Sieve Method selected.\n");
+			break;
+		case 5:
+			selected_method = FACTOR_METHOD_FERMAT;
+			printf("Fermat's Method selected.\n");
+			break;	
+		case 6:
+			selected_method = FACTOR_METHOD_POLLARD;
+			printf("Pollard's Rho Method selected.\n");
+			break;
+		default:
+			printf("Invalid method selected. Defaulting to Trial Division Method.\n");
+			selected_method = FACTOR_METHOD_TRAIL;
+			break;
 	}
+
+	
     
 	int factors[64];
     int count = factor_number(x, selected_method, factors, 64);

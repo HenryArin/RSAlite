@@ -6,15 +6,7 @@ using primality checks from prime.c*/
 #include "prime.h"
 #include <limits.h>
 
-/*
-int get_factors(int x, void (*callback)(int)) {
-    for ( int j = 1; j <= x; j++) {
-        if (x % j == 0) {
-            callback(j);
-        }
-}
-}
-*/
+
 
 int factor_with_sqrt(int n, int *factors, int max_factors)
 {
