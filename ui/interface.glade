@@ -103,8 +103,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="sieve_of_eratosthenes_button">
-            <property name="label" translatable="yes">Sieve of Eratosthenes</property>
+          <object class="GtkButton" id="coming soon_button_1">
+            <property name="label" translatable="yes">Coming soon</property>
             <property name="width-request">150</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
@@ -164,7 +164,7 @@
         </child>
         <child>
           <object class="GtkToggleButton" id="simd_toggle">
-            <property name="label" translatable="yes">SIMD Off</property>
+            <property name="label" translatable="yes">SIMD</property>
             <property name="width-request">150</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
@@ -179,7 +179,7 @@
         </child>
         <child>
           <object class="GtkToggleButton" id="mt_toggle">
-            <property name="label" translatable="yes">Multi-Threading Off</property>
+            <property name="label" translatable="yes">Multi-Threading</property>
             <property name="width-request">150</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
@@ -240,16 +240,15 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="coming_soon_button">
-            <property name="label" translatable="yes">Coming Soon</property>
+          <object class="GtkToggleButton" id="sieve_button">
+            <property name="label" translatable="yes">Sieve of Eratosthenese</property>
             <property name="width-request">150</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
-            <property name="sensitive">False</property>
             <property name="can-focus">False</property>
             <property name="receives-default">False</property>
             <property name="hexpand">True</property>
-          </object>
+          </object>  
           <packing>
             <property name="left-attach">2</property>
             <property name="top-attach">6</property>

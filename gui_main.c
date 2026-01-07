@@ -1,8 +1,8 @@
 #include <gtk/gtk.h>
 #include <stdint.h>
+#include <limits.h>
 #include "factor.h"
 #include "prime.h"
-#include <limits.h>
 
 typedef struct
 {
@@ -11,28 +11,30 @@ typedef struct
     GtkWidget *result_view;
 
     FactorMethod method;
+
     GtkWidget *trial_button;
     GtkWidget *sqrt_button;
     GtkWidget *wheel_button;
+    GtkWidget *sieve_button;
     GtkWidget *fermat_button;
     GtkWidget *pollard_button;
+
+    struct OptimizationContext opt;
 } AppWidgets;
 
+static void on_entry_insert_text(GtkEditable *, const gchar *, gint, gint *, gpointer);
 
-static void on_entry_insert_text(GtkEditable *editable,
-                                 const gchar *text,
-                                 gint length,
-                                 gint *position,
-                                 gpointer user_data);
+static void on_factor_clicked(GtkButton *, gpointer);
+static void on_clear_clicked(GtkButton *, gpointer);
+static void on_quit_clicked(GtkButton *, gpointer);
 
-static void on_factor_clicked(GtkButton *button, gpointer user_data);
-static void on_clear_clicked(GtkButton *button, gpointer user_data);
-static void on_quit_clicked(GtkButton *button, gpointer user_data);
-static void on_trial_division_clicked(GtkButton *button, gpointer user_data);
-static void on_square_root_clicked(GtkButton *button, gpointer user_data);
-static void on_wheel_clicked(GtkButton *button, gpointer user_data);
-static void on_fermat_clicked(GtkButton *button, gpointer user_data);
-static void on_pollard_clicked(GtkButton *button, gpointer user_data);
+static void on_trial_division_clicked(GtkButton *, gpointer);
+static void on_square_root_clicked(GtkButton *, gpointer);
+static void on_wheel_clicked(GtkButton *, gpointer);
+static void on_fermat_clicked(GtkButton *, gpointer);
+static void on_pollard_clicked(GtkButton *, gpointer);
+
+static void on_sieve_toggled(GtkToggleButton *, gpointer);
 
 static void on_activate(GtkApplication *app, gpointer user_data)
 {
@@ -41,76 +43,64 @@ static void on_activate(GtkApplication *app, gpointer user_data)
 
     if (!window)
     {
-        g_printerr("Could not find 'entry_window' in interface.glade\n");
+        g_printerr("Could not find entry_window\n");
         g_object_unref(builder);
         return;
     }
 
     AppWidgets *w = g_new0(AppWidgets, 1);
-    w->window = window;
-    w->entry = GTK_WIDGET(gtk_builder_get_object(builder, "entry_display"));
-    w->result_view = GTK_WIDGET(gtk_builder_get_object(builder, "result_output"));
+
+    w->window       = window;
+    w->entry        = GTK_WIDGET(gtk_builder_get_object(builder, "entry_display"));
+    w->result_view  = GTK_WIDGET(gtk_builder_get_object(builder, "result_output"));
 
     GtkWidget *factor_button = GTK_WIDGET(gtk_builder_get_object(builder, "factor_button"));
-    GtkWidget *clear_button = GTK_WIDGET(gtk_builder_get_object(builder, "clear_button"));
-    GtkWidget *quit_button = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
+    GtkWidget *clear_button  = GTK_WIDGET(gtk_builder_get_object(builder, "clear_button"));
+    GtkWidget *quit_button   = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
 
-    w->trial_button = GTK_WIDGET(gtk_builder_get_object(builder, "trial_division_button"));
-    w->sqrt_button = GTK_WIDGET(gtk_builder_get_object(builder, "square_root_button"));
-    w->wheel_button = GTK_WIDGET(gtk_builder_get_object(builder, "wheel_factorization_button"));
-    w->fermat_button = GTK_WIDGET(gtk_builder_get_object(builder, "fermats_primality_test_button"));
+    w->trial_button   = GTK_WIDGET(gtk_builder_get_object(builder, "trial_division_button"));
+    w->sqrt_button    = GTK_WIDGET(gtk_builder_get_object(builder, "square_root_button"));
+    w->wheel_button   = GTK_WIDGET(gtk_builder_get_object(builder, "wheel_factorization_button"));
+    w->fermat_button  = GTK_WIDGET(gtk_builder_get_object(builder, "fermats_primality_test_button"));
     w->pollard_button = GTK_WIDGET(gtk_builder_get_object(builder, "pollards_rho_button"));
+    w->sieve_button   = GTK_WIDGET(gtk_builder_get_object(builder, "sieve_button"));
 
-    w->method = FACTOR_METHOD_TRAIL;
+    w->method = FACTOR_METHOD_TRIAL;
 
-    g_signal_connect(w->entry,
-                     "insert-text",
-                     G_CALLBACK(on_entry_insert_text),
-                     NULL);
+    w->opt.USE_SIEVE = false;
+    w->opt.USE_SIMD = false;
+    w->opt.USE_MULTITHREADING = false;
+    w->opt.USE_GPU = false;
 
-    g_signal_connect(factor_button,
-                     "clicked",
-                     G_CALLBACK(on_factor_clicked),
-                     w);
+    gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve OFF");
 
-    g_signal_connect(clear_button,
-                     "clicked",
-                     G_CALLBACK(on_clear_clicked),
-                     w);
+    /* ---- Signals ---- */
+    g_signal_connect(w->entry, "insert-text",
+                     G_CALLBACK(on_entry_insert_text), NULL);
 
-    g_signal_connect(quit_button,
-                     "clicked",
-                     G_CALLBACK(on_quit_clicked),
-                     w);
+    g_signal_connect(factor_button, "clicked",
+                     G_CALLBACK(on_factor_clicked), w);
+    g_signal_connect(clear_button, "clicked",
+                     G_CALLBACK(on_clear_clicked), w);
+    g_signal_connect(quit_button, "clicked",
+                     G_CALLBACK(on_quit_clicked), w);
 
-    g_signal_connect(w->trial_button,
-                     "clicked",
-                     G_CALLBACK(on_trial_division_clicked),
-                     w);
+    g_signal_connect(w->trial_button, "clicked",
+                     G_CALLBACK(on_trial_division_clicked), w);
+    g_signal_connect(w->sqrt_button, "clicked",
+                     G_CALLBACK(on_square_root_clicked), w);
+    g_signal_connect(w->wheel_button, "clicked",
+                     G_CALLBACK(on_wheel_clicked), w);
+    g_signal_connect(w->fermat_button, "clicked",
+                     G_CALLBACK(on_fermat_clicked), w);
+    g_signal_connect(w->pollard_button, "clicked",
+                     G_CALLBACK(on_pollard_clicked), w);
 
-    g_signal_connect(w->sqrt_button,
-                     "clicked",
-                     G_CALLBACK(on_square_root_clicked),
-                     w);
-    
-    g_signal_connect(w->wheel_button,
-                     "clicked",
-                     G_CALLBACK(on_wheel_clicked),
-                     w);
+    g_signal_connect(w->sieve_button, "toggled",
+                     G_CALLBACK(on_sieve_toggled), w);
 
-
-    g_signal_connect(w->fermat_button,
-                     "clicked",
-                     G_CALLBACK(on_fermat_clicked),
-                     w);
-
-    g_signal_connect(w->pollard_button,
-                     "clicked",
-                     G_CALLBACK(on_pollard_clicked),
-                     w);
     gtk_window_set_application(GTK_WINDOW(window), app);
     gtk_widget_show_all(window);
-
     g_object_unref(builder);
 }
 
@@ -132,10 +122,11 @@ static void on_entry_insert_text(GtkEditable *editable,
 
 static void on_factor_clicked(GtkButton *button, gpointer user_data)
 {
-    AppWidgets *w = (AppWidgets *)user_data;
-    const gchar *text = gtk_entry_get_text(GTK_ENTRY(w->entry));
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(w->result_view));
+    AppWidgets *w = user_data;
+    GtkTextBuffer *buffer =
+        gtk_text_view_get_buffer(GTK_TEXT_VIEW(w->result_view));
 
+    const gchar *text = gtk_entry_get_text(GTK_ENTRY(w->entry));
     if (text[0] == '\0')
     {
         gtk_text_buffer_set_text(buffer, "Please enter a number.\n", -1);
@@ -144,58 +135,40 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
 
     gchar *endptr = NULL;
     unsigned long long n64 = g_ascii_strtoull(text, &endptr, 10);
-    if (endptr == text || *endptr != '\0')
-    {
-        gtk_text_buffer_set_text(buffer, "Invalid number.\n", -1);
-        return;
-    }
 
-    if (n64 <= 1 || n64 > INT32_MAX)
+    if (endptr == text || *endptr != '\0' || n64 <= 1 || n64 > INT32_MAX)
     {
-        gtk_text_buffer_set_text(buffer, "Number out of supported range.\n", -1);
+        gtk_text_buffer_set_text(buffer, "Invalid or unsupported number.\n", -1);
         return;
     }
 
     int n = (int)n64;
-
     int factors[64];
-    int count = factor_number(n, w->method, factors, 64);
+
+    int count = factor_number(n, w->method, factors, 64, &w->opt);
     if (count <= 0)
     {
-        gtk_text_buffer_set_text(buffer, "Number is prime or cannot be factored.\n", -1);
+        gtk_text_buffer_set_text(buffer, "Prime or unfactorable.\n", -1);
         return;
     }
-    const char *method_name = NULL;
-    switch (w->method)
-    {
-    case FACTOR_METHOD_TRAIL:
-        method_name = "Trial Division";
-        break;
-    case FACTOR_METHOD_SQRT:
-        method_name = "Square Root";
-        break;
-        case FACTOR_METHOD_WHEEL:
-        method_name = "Wheel Factorization";
-        break;
-    default:
-        method_name = "Unknown";
-        break;
-    }
+
+    const char *method_name =
+        (w->method == FACTOR_METHOD_TRIAL) ? "Trial Division" :
+        (w->method == FACTOR_METHOD_SQRT)  ? "Square Root" :
+        (w->method == FACTOR_METHOD_WHEEL) ? "Wheel Factorization" :
+        "Other";
 
     GString *out = g_string_new(NULL);
-    g_string_append_printf(out, "Method: %s\n", method_name);
-    g_string_append_printf(out, "%d = ", n);
+    g_string_append_printf(out, "Method: %s\n%d = ", method_name, n);
 
     for (int i = 0; i < count; i++)
     {
         g_string_append_printf(out, "%d", factors[i]);
         if (i < count - 1)
-        {
             g_string_append(out, " × ");
-        }
     }
-    g_string_append(out, "\n");
 
+    g_string_append(out, "\n");
     gtk_text_buffer_set_text(buffer, out->str, -1);
     g_string_free(out, TRUE);
 }
@@ -204,77 +177,74 @@ static void on_clear_clicked(GtkButton *button, gpointer user_data)
 {
     AppWidgets *w = user_data;
     gtk_entry_set_text(GTK_ENTRY(w->entry), "");
-
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(w->result_view));
-    gtk_text_buffer_set_text(buffer, "", -1);
+    gtk_text_buffer_set_text(
+        gtk_text_view_get_buffer(GTK_TEXT_VIEW(w->result_view)),
+        "", -1);
 }
 
 static void on_quit_clicked(GtkButton *button, gpointer user_data)
 {
-    AppWidgets *w = user_data;
-    gtk_window_close(GTK_WINDOW(w->window));
+    gtk_window_close(GTK_WINDOW(((AppWidgets *)user_data)->window));
 }
 
-static void on_trial_division_clicked(GtkButton *button, gpointer user_data)
+static void reset_method_labels(AppWidgets *w)
 {
-    AppWidgets *w = (AppWidgets *)user_data;
-    w->method = FACTOR_METHOD_TRAIL;
-
-    gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division (Selected)");
+    gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
     gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
-     gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
+    gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
     gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
     gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
 }
 
-static void on_square_root_clicked(GtkButton *button, gpointer user_data)
+static void on_trial_division_clicked(GtkButton *b, gpointer u)
 {
-    AppWidgets *w = (AppWidgets *)user_data;
+    AppWidgets *w = u;
+    w->method = FACTOR_METHOD_TRIAL;
+    reset_method_labels(w);
+    gtk_button_set_label(b, "Trial Division (Selected)");
+}
+
+static void on_square_root_clicked(GtkButton *b, gpointer u)
+{
+    AppWidgets *w = u;
     w->method = FACTOR_METHOD_SQRT;
+    reset_method_labels(w);
+    gtk_button_set_label(b, "Square Root (Selected)");
+}
 
-    gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root (Selected)");
-    gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
-     gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
-    gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
-    gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
-}   
-
-static void on_wheel_clicked(GtkButton *button, gpointer user_data)
+static void on_wheel_clicked(GtkButton *b, gpointer u)
 {
-    AppWidgets *w = (AppWidgets *)user_data;
+    AppWidgets *w = u;
     w->method = FACTOR_METHOD_WHEEL;
-
-    gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
-    gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
-    gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization (Selected)");
-    gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
-    gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
+    reset_method_labels(w);
+    gtk_button_set_label(b, "Wheel Factorization (Selected)");
 }
 
-
-static void on_fermat_clicked(GtkButton *button, gpointer user_data)
+static void on_fermat_clicked(GtkButton *b, gpointer u)
 {
-    AppWidgets *w = (AppWidgets *)user_data;
+    AppWidgets *w = u;
     w->method = FACTOR_METHOD_FERMAT;
-
-    gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
-    gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
-    gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
-    gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test (Selected)");
-    gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
+    reset_method_labels(w);
+    gtk_button_set_label(b, "Fermat's Primality Test (Selected)");
 }
 
-static void on_pollard_clicked(GtkButton *button, gpointer user_data)
+static void on_pollard_clicked(GtkButton *b, gpointer u)
 {
-    AppWidgets *w = (AppWidgets *)user_data;
+    AppWidgets *w = u;
     w->method = FACTOR_METHOD_POLLARD;
-
-    gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
-    gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
-    gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
-    gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
-    gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho (Selected)");
+    reset_method_labels(w);
+    gtk_button_set_label(b, "Pollard's Rho (Selected)");
 }
+
+static void on_sieve_toggled(GtkToggleButton *button, gpointer user_data)
+{
+    AppWidgets *w = user_data;
+    w->opt.USE_SIEVE = gtk_toggle_button_get_active(button);
+
+    gtk_button_set_label(GTK_BUTTON(button),
+        w->opt.USE_SIEVE ? "Sieve ON" : "Sieve OFF");
+}
+
 int main(int argc, char **argv)
 {
     GtkApplication *app =
@@ -286,4 +256,3 @@ int main(int argc, char **argv)
     g_object_unref(app);
     return status;
 }
-

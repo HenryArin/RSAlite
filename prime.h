@@ -7,6 +7,7 @@ int is_prime_sqrt(int n);
 int is_prime_trail(int n);
 int is_prime_wheel(int n);
 
+int *generate_prime_with_sieve(int n);
 
 
 #endif // PRIME_H

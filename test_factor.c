@@ -50,7 +50,7 @@ static void run_factor_tests(void)
     int f97[]  = {97};
     int f2310[] = {2,3,5,7,11};
 
-    FactorMethod m_trail = FACTOR_METHOD_TRAIL;
+    FactorMethod m_trail = FACTOR_METHOD_TRIAL;
     FactorMethod m_sqrt  = FACTOR_METHOD_SQRT;
     FactorMethod m_wheel = FACTOR_METHOD_WHEEL;
 
