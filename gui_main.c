@@ -19,6 +19,7 @@ typedef struct
     GtkWidget *sieve_button;
     GtkWidget *fermat_button;
     GtkWidget *pollard_button;
+    GtkWidget *benchmark_button;
 
     struct OptimizationContext opt;
 } AppWidgets;
@@ -36,6 +37,8 @@ static void on_fermat_clicked(GtkButton *, gpointer);
 static void on_pollard_clicked(GtkButton *, gpointer);
 
 static void on_sieve_toggled(GtkToggleButton *, gpointer);
+
+static void on_benchmark_toggled(GtkToggleButton *, gpointer);
 
 static void on_activate(GtkApplication *app, gpointer user_data)
 {
@@ -64,7 +67,12 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     w->wheel_button   = GTK_WIDGET(gtk_builder_get_object(builder, "wheel_factorization_button"));
     w->fermat_button  = GTK_WIDGET(gtk_builder_get_object(builder, "fermats_primality_test_button"));
     w->pollard_button = GTK_WIDGET(gtk_builder_get_object(builder, "pollards_rho_button"));
+
     w->sieve_button   = GTK_WIDGET(gtk_builder_get_object(builder, "sieve_button"));
+
+    w->benchmark_button   = GTK_WIDGET(gtk_builder_get_object(builder, "benchmark_button"));
+
+
 
     w->method = FACTOR_METHOD_TRIAL;
 
@@ -72,8 +80,12 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     w->opt.USE_SIMD = false;
     w->opt.USE_MULTITHREADING = false;
     w->opt.USE_GPU = false;
+    w->opt.USE_BENCHMARKING = false;
 
     gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve OFF");
+
+    gtk_button_set_label(GTK_BUTTON(w->benchmark_button), "Benchmarking OFF");
+
 
     /* ---- Signals ---- */
     g_signal_connect(w->entry, "insert-text",
@@ -99,6 +111,9 @@ static void on_activate(GtkApplication *app, gpointer user_data)
 
     g_signal_connect(w->sieve_button, "toggled",
                      G_CALLBACK(on_sieve_toggled), w);
+
+    g_signal_connect(w->benchmark_button, "toggled",
+                     G_CALLBACK(on_benchmark_toggled), w);                 
 
     gtk_window_set_application(GTK_WINDOW(window), app);
     gtk_widget_show_all(window);
@@ -248,6 +263,15 @@ static void on_sieve_toggled(GtkToggleButton *button, gpointer user_data)
 
     gtk_button_set_label(GTK_BUTTON(button),
         w->opt.USE_SIEVE ? "Sieve ON" : "Sieve OFF");
+}
+
+static void on_benchmark_toggled(GtkToggleButton *button, gpointer user_data)
+{
+    AppWidgets *w = user_data;
+    w->opt.USE_BENCHMARKING = gtk_toggle_button_get_active(button);
+
+    gtk_button_set_label(GTK_BUTTON(button),
+        w->opt.USE_BENCHMARKING ? "Benchmarking ON" : "Benchmarking OFF");
 }
 
 int main(int argc, char **argv)

@@ -9,6 +9,7 @@ struct OptimizationContext {
     bool USE_SIMD;
     bool USE_MULTITHREADING;
     bool USE_GPU;
+    bool USE_BENCHMARKING;
 };
 
 #endif

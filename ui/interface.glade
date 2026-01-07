@@ -209,8 +209,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="benchmark_button">
-            <property name="label" translatable="yes">Benchmark Mode</property>
+          <object class="GtkToggleButton" id="benchmark_button">
+            <property name="label" translatable="yes">Benchmark</property>
             <property name="width-request">150</property>
             <property name="height-request">40</property>
             <property name="visible">True</property>
