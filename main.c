@@ -30,14 +30,10 @@ int main() {
 			printf("Wheel Factorization Method selected.\n");
 			break;
 		case 4:
-			selected_method = FACTOR_METHOD_SIEVE;
-			printf("Sieve Method selected.\n");
-			break;
-		case 5:
 			selected_method = FACTOR_METHOD_FERMAT;
 			printf("Fermat's Method selected.\n");
 			break;	
-		case 6:
+		case 5:
 			selected_method = FACTOR_METHOD_POLLARD;
 			printf("Pollard's Rho Method selected.\n");
 			break;
