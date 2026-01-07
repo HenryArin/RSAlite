@@ -3,6 +3,7 @@
 #include <limits.h>
 #include "factor.h"
 #include "prime.h"
+#include <errno.h>
 
 typedef struct
 {
@@ -134,16 +135,17 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
     }
 
     gchar *endptr = NULL;
+    errno = 0;
     unsigned long long n64 = g_ascii_strtoull(text, &endptr, 10);
 
-    if (endptr == text || *endptr != '\0' || n64 <= 1 || n64 > INT32_MAX)
+    if (endptr == text || *endptr != '\0' || errno == ERANGE || n64 <= 1ULL)
     {
         gtk_text_buffer_set_text(buffer, "Invalid or unsupported number.\n", -1);
         return;
     }
 
-    int n = (int)n64;
-    int factors[64];
+    uint64_t n = (uint64_t)n64;
+    uint64_t factors[64];
 
     int count = factor_number(n, w->method, factors, 64, &w->opt);
     if (count <= 0)
@@ -156,14 +158,16 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
         (w->method == FACTOR_METHOD_TRIAL) ? "Trial Division" :
         (w->method == FACTOR_METHOD_SQRT)  ? "Square Root" :
         (w->method == FACTOR_METHOD_WHEEL) ? "Wheel Factorization" :
+        (w->method == FACTOR_METHOD_FERMAT) ? "Fermat" :
+        (w->method == FACTOR_METHOD_POLLARD) ? "Pollard" :
         "Other";
 
     GString *out = g_string_new(NULL);
-    g_string_append_printf(out, "Method: %s\n%d = ", method_name, n);
+    g_string_append_printf(out, "Method: %s\n%llu = ", method_name, (unsigned long long)n);
 
     for (int i = 0; i < count; i++)
     {
-        g_string_append_printf(out, "%d", factors[i]);
+        g_string_append_printf(out, "%llu", (unsigned long long)factors[i]);
         if (i < count - 1)
             g_string_append(out, " × ");
     }
@@ -172,6 +176,7 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
     gtk_text_buffer_set_text(buffer, out->str, -1);
     g_string_free(out, TRUE);
 }
+
 
 static void on_clear_clicked(GtkButton *button, gpointer user_data)
 {

@@ -3,11 +3,17 @@ CFLAGS  = -Wall -Wextra -std=c11 -g
 
 CLI_OBJS = main.o factor.o prime.o
 GUI_OBJS = gui_main.o factor.o prime.o
+BENCH_OBJS = bench.o factor.o prime.o
+
 
 all: rsalite
 
 rsalite: $(CLI_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(CLI_OBJS)
+
+rsalite-bench: $(BENCH_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(BENCH_OBJS)
+
 
 main.o: main.c factor.h prime.h
 	$(CC) $(CFLAGS) -c $<
@@ -35,8 +41,12 @@ test: test_factor
 test_factor: test_factor.o factor.o prime.o
 	$(CC) $(CFLAGS) -o test_factor test_factor.o factor.o prime.o
 
+bench.o: bench.c factor.h prime.h
+	$(CC) $(CFLAGS) -c bench.c
+
 
 clean:
-	rm -f *.o rsalite rsalite-gui
+	rm -f *.o rsalite rsalite-gui rsalite-bench
+
 
 .PHONY: all clean
