@@ -4,6 +4,7 @@
 #include "factor.h"
 #include "prime.h"
 #include <errno.h>
+#include <time.h>
 
 typedef struct
 {
@@ -25,6 +26,13 @@ typedef struct
 } AppWidgets;
 
 static void on_entry_insert_text(GtkEditable *, const gchar *, gint, gint *, gpointer);
+
+static double now_seconds(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec + ts.tv_nsec * 1e-9;
+}
 
 static void on_factor_clicked(GtkButton *, gpointer);
 static void on_clear_clicked(GtkButton *, gpointer);
@@ -54,25 +62,23 @@ static void on_activate(GtkApplication *app, gpointer user_data)
 
     AppWidgets *w = g_new0(AppWidgets, 1);
 
-    w->window       = window;
-    w->entry        = GTK_WIDGET(gtk_builder_get_object(builder, "entry_display"));
-    w->result_view  = GTK_WIDGET(gtk_builder_get_object(builder, "result_output"));
+    w->window = window;
+    w->entry = GTK_WIDGET(gtk_builder_get_object(builder, "entry_display"));
+    w->result_view = GTK_WIDGET(gtk_builder_get_object(builder, "result_output"));
 
     GtkWidget *factor_button = GTK_WIDGET(gtk_builder_get_object(builder, "factor_button"));
-    GtkWidget *clear_button  = GTK_WIDGET(gtk_builder_get_object(builder, "clear_button"));
-    GtkWidget *quit_button   = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
+    GtkWidget *clear_button = GTK_WIDGET(gtk_builder_get_object(builder, "clear_button"));
+    GtkWidget *quit_button = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
 
-    w->trial_button   = GTK_WIDGET(gtk_builder_get_object(builder, "trial_division_button"));
-    w->sqrt_button    = GTK_WIDGET(gtk_builder_get_object(builder, "square_root_button"));
-    w->wheel_button   = GTK_WIDGET(gtk_builder_get_object(builder, "wheel_factorization_button"));
-    w->fermat_button  = GTK_WIDGET(gtk_builder_get_object(builder, "fermats_primality_test_button"));
+    w->trial_button = GTK_WIDGET(gtk_builder_get_object(builder, "trial_division_button"));
+    w->sqrt_button = GTK_WIDGET(gtk_builder_get_object(builder, "square_root_button"));
+    w->wheel_button = GTK_WIDGET(gtk_builder_get_object(builder, "wheel_factorization_button"));
+    w->fermat_button = GTK_WIDGET(gtk_builder_get_object(builder, "fermats_primality_test_button"));
     w->pollard_button = GTK_WIDGET(gtk_builder_get_object(builder, "pollards_rho_button"));
 
-    w->sieve_button   = GTK_WIDGET(gtk_builder_get_object(builder, "sieve_button"));
+    w->sieve_button = GTK_WIDGET(gtk_builder_get_object(builder, "sieve_button"));
 
-    w->benchmark_button   = GTK_WIDGET(gtk_builder_get_object(builder, "benchmark_button"));
-
-
+    w->benchmark_button = GTK_WIDGET(gtk_builder_get_object(builder, "benchmark_button"));
 
     w->method = FACTOR_METHOD_TRIAL;
 
@@ -85,7 +91,6 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve OFF");
 
     gtk_button_set_label(GTK_BUTTON(w->benchmark_button), "Benchmarking OFF");
-
 
     /* ---- Signals ---- */
     g_signal_connect(w->entry, "insert-text",
@@ -113,7 +118,7 @@ static void on_activate(GtkApplication *app, gpointer user_data)
                      G_CALLBACK(on_sieve_toggled), w);
 
     g_signal_connect(w->benchmark_button, "toggled",
-                     G_CALLBACK(on_benchmark_toggled), w);                 
+                     G_CALLBACK(on_benchmark_toggled), w);
 
     gtk_window_set_application(GTK_WINDOW(window), app);
     gtk_widget_show_all(window);
@@ -162,36 +167,81 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
     uint64_t n = (uint64_t)n64;
     uint64_t factors[64];
 
-    int count = factor_number(n, w->method, factors, 64, &w->opt);
-    if (count <= 0)
+    double elapsed = 0.0;
+
+    if (w->benchmark_button)
     {
-        gtk_text_buffer_set_text(buffer, "Prime or unfactorable.\n", -1);
-        return;
+        double start = now_seconds();
+        int count = factor_number(n, w->method, factors, 64, &w->opt);
+        double end = now_seconds();
+        elapsed = end - start;
+
+        if (count <= 0)
+        {
+            gtk_text_buffer_set_text(buffer, "Prime or unfactorable.\n", -1);
+            return;
+        }
+
+        GString *out = g_string_new(NULL);
+
+        const char *method_name =
+            (w->method == FACTOR_METHOD_TRIAL) ? "Trial Division" : (w->method == FACTOR_METHOD_SQRT)  ? "Square Root"
+                                                                : (w->method == FACTOR_METHOD_WHEEL)   ? "Wheel Factorization"
+                                                                : (w->method == FACTOR_METHOD_FERMAT)  ? "Fermat"
+                                                                : (w->method == FACTOR_METHOD_POLLARD) ? "Pollard"
+                                                                                                       : "Other";
+
+        g_string_append_printf(out,
+                               "Benchmark Mode: ON\nMethod: %s\nTime: %.6f seconds\n\n%llu = ",
+                               method_name,
+                               elapsed,
+                               (unsigned long long)n);
+
+        for (int i = 0; i < count; i++)
+        {
+            g_string_append_printf(out, "%llu", (unsigned long long)factors[i]);
+            if (i < count - 1)
+                g_string_append(out, " × ");
+        }
+
+        g_string_append(out, "\n");
+        gtk_text_buffer_set_text(buffer, out->str, -1);
+        g_string_free(out, TRUE);
     }
-
-    const char *method_name =
-        (w->method == FACTOR_METHOD_TRIAL) ? "Trial Division" :
-        (w->method == FACTOR_METHOD_SQRT)  ? "Square Root" :
-        (w->method == FACTOR_METHOD_WHEEL) ? "Wheel Factorization" :
-        (w->method == FACTOR_METHOD_FERMAT) ? "Fermat" :
-        (w->method == FACTOR_METHOD_POLLARD) ? "Pollard" :
-        "Other";
-
-    GString *out = g_string_new(NULL);
-    g_string_append_printf(out, "Method: %s\n%llu = ", method_name, (unsigned long long)n);
-
-    for (int i = 0; i < count; i++)
+    else
     {
-        g_string_append_printf(out, "%llu", (unsigned long long)factors[i]);
-        if (i < count - 1)
-            g_string_append(out, " × ");
-    }
+        int count = factor_number(n, w->method, factors, 64, &w->opt);
+        if (count <= 0)
+        {
+            gtk_text_buffer_set_text(buffer, "Prime or unfactorable.\n", -1);
+            return;
+        }
 
-    g_string_append(out, "\n");
-    gtk_text_buffer_set_text(buffer, out->str, -1);
-    g_string_free(out, TRUE);
+        const char *method_name =
+            (w->method == FACTOR_METHOD_TRIAL) ? "Trial Division" : (w->method == FACTOR_METHOD_SQRT)  ? "Square Root"
+                                                                : (w->method == FACTOR_METHOD_WHEEL)   ? "Wheel Factorization"
+                                                                : (w->method == FACTOR_METHOD_FERMAT)  ? "Fermat"
+                                                                : (w->method == FACTOR_METHOD_POLLARD) ? "Pollard"
+                                                                                                       : "Other";
+
+        GString *out = g_string_new(NULL);
+        g_string_append_printf(out,
+                               "Method: %s\n%llu = ",
+                               method_name,
+                               (unsigned long long)n);
+
+        for (int i = 0; i < count; i++)
+        {
+            g_string_append_printf(out, "%llu", (unsigned long long)factors[i]);
+            if (i < count - 1)
+                g_string_append(out, " × ");
+        }
+
+        g_string_append(out, "\n");
+        gtk_text_buffer_set_text(buffer, out->str, -1);
+        g_string_free(out, TRUE);
+    }
 }
-
 
 static void on_clear_clicked(GtkButton *button, gpointer user_data)
 {
@@ -262,7 +312,7 @@ static void on_sieve_toggled(GtkToggleButton *button, gpointer user_data)
     w->opt.USE_SIEVE = gtk_toggle_button_get_active(button);
 
     gtk_button_set_label(GTK_BUTTON(button),
-        w->opt.USE_SIEVE ? "Sieve ON" : "Sieve OFF");
+                         w->opt.USE_SIEVE ? "Sieve ON" : "Sieve OFF");
 }
 
 static void on_benchmark_toggled(GtkToggleButton *button, gpointer user_data)
@@ -271,7 +321,7 @@ static void on_benchmark_toggled(GtkToggleButton *button, gpointer user_data)
     w->opt.USE_BENCHMARKING = gtk_toggle_button_get_active(button);
 
     gtk_button_set_label(GTK_BUTTON(button),
-        w->opt.USE_BENCHMARKING ? "Benchmarking ON" : "Benchmarking OFF");
+                         w->opt.USE_BENCHMARKING ? "Benchmarking ON" : "Benchmarking OFF");
 }
 
 int main(int argc, char **argv)
