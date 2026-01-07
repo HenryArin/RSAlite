@@ -14,10 +14,10 @@ typedef struct
     GtkWidget *trial_button;
     GtkWidget *sqrt_button;
     GtkWidget *wheel_button;
-    GtkWidget *sieve_button;
     GtkWidget *fermat_button;
     GtkWidget *pollard_button;
 } AppWidgets;
+
 
 static void on_entry_insert_text(GtkEditable *editable,
                                  const gchar *text,
@@ -31,7 +31,6 @@ static void on_quit_clicked(GtkButton *button, gpointer user_data);
 static void on_trial_division_clicked(GtkButton *button, gpointer user_data);
 static void on_square_root_clicked(GtkButton *button, gpointer user_data);
 static void on_wheel_clicked(GtkButton *button, gpointer user_data);
-static void on_sieve_clicked(GtkButton *button, gpointer user_data);
 static void on_fermat_clicked(GtkButton *button, gpointer user_data);
 static void on_pollard_clicked(GtkButton *button, gpointer user_data);
 
@@ -59,7 +58,6 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     w->trial_button = GTK_WIDGET(gtk_builder_get_object(builder, "trial_division_button"));
     w->sqrt_button = GTK_WIDGET(gtk_builder_get_object(builder, "square_root_button"));
     w->wheel_button = GTK_WIDGET(gtk_builder_get_object(builder, "wheel_factorization_button"));
-    w->sieve_button = GTK_WIDGET(gtk_builder_get_object(builder, "sieve_of_eratosthenes_button"));
     w->fermat_button = GTK_WIDGET(gtk_builder_get_object(builder, "fermats_primality_test_button"));
     w->pollard_button = GTK_WIDGET(gtk_builder_get_object(builder, "pollards_rho_button"));
 
@@ -100,10 +98,6 @@ static void on_activate(GtkApplication *app, gpointer user_data)
                      G_CALLBACK(on_wheel_clicked),
                      w);
 
-    g_signal_connect(w->sieve_button,
-                     "clicked",
-                     G_CALLBACK(on_sieve_clicked),
-                     w);
 
     g_signal_connect(w->fermat_button,
                      "clicked",
@@ -229,7 +223,6 @@ static void on_trial_division_clicked(GtkButton *button, gpointer user_data)
     gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division (Selected)");
     gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
      gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
-    gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve of Eratosthenes");
     gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
     gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
 }
@@ -242,7 +235,6 @@ static void on_square_root_clicked(GtkButton *button, gpointer user_data)
     gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root (Selected)");
     gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
      gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
-    gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve of Eratosthenes");
     gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
     gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
 }   
@@ -255,23 +247,11 @@ static void on_wheel_clicked(GtkButton *button, gpointer user_data)
     gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
     gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
     gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization (Selected)");
-    gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve of Eratosthenes");
     gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
     gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
 }
 
-static void on_sieve_clicked(GtkButton *button, gpointer user_data)
-{
-    AppWidgets *w = (AppWidgets *)user_data;
-    w->method = FACTOR_METHOD_SIEVE;
 
-    gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
-    gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
-    gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
-    gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve of Eratosthenes (Selected)");
-    gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
-    gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
-}
 static void on_fermat_clicked(GtkButton *button, gpointer user_data)
 {
     AppWidgets *w = (AppWidgets *)user_data;
@@ -280,7 +260,6 @@ static void on_fermat_clicked(GtkButton *button, gpointer user_data)
     gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
     gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
     gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
-    gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve of Eratosthenes");
     gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test (Selected)");
     gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho");
 }
@@ -293,7 +272,6 @@ static void on_pollard_clicked(GtkButton *button, gpointer user_data)
     gtk_button_set_label(GTK_BUTTON(w->sqrt_button), "Square Root");
     gtk_button_set_label(GTK_BUTTON(w->trial_button), "Trial Division");
     gtk_button_set_label(GTK_BUTTON(w->wheel_button), "Wheel Factorization");
-    gtk_button_set_label(GTK_BUTTON(w->sieve_button), "Sieve of Eratosthenes");
     gtk_button_set_label(GTK_BUTTON(w->fermat_button), "Fermat's Primality Test");
     gtk_button_set_label(GTK_BUTTON(w->pollard_button), "Pollard's Rho (Selected)");
 }

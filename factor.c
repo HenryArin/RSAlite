@@ -142,11 +142,7 @@ int factor_number(int n, FactorMethod method, int *factors, int max_factors)
         case FACTOR_METHOD_WHEEL:
             printf("DEBUG: using Wheel factorization\n");
             return factor_with_wheel(n, factors, max_factors);
-        
-        case FACTOR_METHOD_SIEVE:
-            printf("DEBUG: Sieve method not implemented\n");
-            return factor_with_sieve(n, factors, max_factors);
-
+    
         case FACTOR_METHOD_FERMAT:
             printf("DEBUG: Fermat method not implemented\n");
             return factor_with_fermat(n, factors, max_factors);

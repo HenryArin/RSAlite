@@ -9,5 +9,4 @@ int is_prime_wheel(int n);
 
 
 
-
 #endif // PRIME_H
