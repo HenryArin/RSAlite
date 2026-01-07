@@ -147,6 +147,13 @@ int factor_number(int n,
                   int max_factors,
                   const struct OptimizationContext *opt)
 {
+    static const struct OptimizationContext default_opt = {
+        .USE_SIEVE = 0
+    };
+
+    if (opt == NULL)
+        opt = &default_opt;
+
     switch (method)
     {
     case FACTOR_METHOD_TRIAL:
