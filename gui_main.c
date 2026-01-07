@@ -169,7 +169,7 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
 
     double elapsed = 0.0;
 
-    if (w->benchmark_button)
+    if (w->opt.USE_BENCHMARKING)
     {
         double start = now_seconds();
         int count = factor_number(n, w->method, factors, 64, &w->opt);
