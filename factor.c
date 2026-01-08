@@ -1,11 +1,21 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include "factor.h"
 #include "prime.h"
 #include "optimization.h"
 
-int factor_with_trial(uint64_t n, uint64_t *factors, int max_factors, bool use_sieve)
+static inline bool cancel_requested(const struct OptimizationContext *opt)
+{
+    return opt && opt->cancel_flag && *opt->cancel_flag;
+}
+
+int factor_with_trial(uint64_t n,
+                      uint64_t *factors,
+                      int max_factors,
+                      bool use_sieve,
+                      const struct OptimizationContext *opt)
 {
     int count = 0;
 
@@ -26,7 +36,12 @@ int factor_with_trial(uint64_t n, uint64_t *factors, int max_factors, bool use_s
 
     for (uint64_t p = 2; p <= n / p; p++)
     {
-        
+        if (cancel_requested(opt))
+        {
+            free(prime);
+            return count;
+        }
+
         if (use_sieve)
         {
             if (prime[p])
@@ -44,8 +59,21 @@ int factor_with_trial(uint64_t n, uint64_t *factors, int max_factors, bool use_s
                 factors[count++] = p;
 
             while (n % p == 0)
+            {
+                if (cancel_requested(opt))
+                {
+                    free(prime);
+                    return count;
+                }
                 n /= p;
+            }
         }
+    }
+
+    if (cancel_requested(opt))
+    {
+        free(prime);
+        return count;
     }
 
     if (n > 1 && count < max_factors)
@@ -55,21 +83,34 @@ int factor_with_trial(uint64_t n, uint64_t *factors, int max_factors, bool use_s
     return count;
 }
 
-int factor_with_sqrt(uint64_t n, uint64_t *factors, int max_factors)
+int factor_with_sqrt(uint64_t n,
+                     uint64_t *factors,
+                     int max_factors,
+                     const struct OptimizationContext *opt)
 {
     int count = 0;
 
     for (uint64_t p = 2; p <= n / p; p++)
     {
+        if (cancel_requested(opt))
+            return count;
+
         if (is_prime_sqrt(p) && n % p == 0)
         {
             if (count < max_factors)
                 factors[count++] = p;
 
             while (n % p == 0)
+            {
+                if (cancel_requested(opt))
+                    return count;
                 n /= p;
+            }
         }
     }
+
+    if (cancel_requested(opt))
+        return count;
 
     if (n > 1 && count < max_factors)
         factors[count++] = n;
@@ -77,7 +118,10 @@ int factor_with_sqrt(uint64_t n, uint64_t *factors, int max_factors)
     return count;
 }
 
-int factor_with_wheel(uint64_t n, uint64_t *factors, int max_factors)
+int factor_with_wheel(uint64_t n,
+                      uint64_t *factors,
+                      int max_factors,
+                      const struct OptimizationContext *opt)
 {
     int count = 0;
 
@@ -88,6 +132,9 @@ int factor_with_wheel(uint64_t n, uint64_t *factors, int max_factors)
 
     for (int i = 0; i < 3; i++)
     {
+        if (cancel_requested(opt))
+            return count;
+
         uint64_t p = small_primes[i];
         if (n % p == 0)
         {
@@ -95,7 +142,11 @@ int factor_with_wheel(uint64_t n, uint64_t *factors, int max_factors)
                 factors[count++] = p;
 
             while (n % p == 0)
+            {
+                if (cancel_requested(opt))
+                    return count;
                 n /= p;
+            }
         }
     }
 
@@ -107,9 +158,15 @@ int factor_with_wheel(uint64_t n, uint64_t *factors, int max_factors)
 
     for (uint64_t k = 0;; k++)
     {
+        if (cancel_requested(opt))
+            return count;
+
         for (int i = 0; i < 8; i++)
         {
-            uint64_t d = base * k + residues[i];
+            if (cancel_requested(opt))
+                return count;
+
+            uint64_t d = (uint64_t)base * k + (uint64_t)residues[i];
 
             if (d <= 1)
                 continue;
@@ -123,26 +180,39 @@ int factor_with_wheel(uint64_t n, uint64_t *factors, int max_factors)
                     factors[count++] = d;
 
                 while (n % d == 0)
+                {
+                    if (cancel_requested(opt))
+                        return count;
                     n /= d;
+                }
             }
         }
     }
 
 done:
+    if (cancel_requested(opt))
+        return count;
+
     if (n > 1 && count < max_factors)
         factors[count++] = n;
 
     return count;
 }
 
-int factor_with_fermat(uint64_t n, uint64_t *factors, int max_factors)
+int factor_with_fermat(uint64_t n,
+                       uint64_t *factors,
+                       int max_factors,
+                       const struct OptimizationContext *opt)
 {
-    return factor_with_sqrt(n, factors, max_factors);
+    return factor_with_sqrt(n, factors, max_factors, opt);
 }
 
-int factor_with_pollard(uint64_t n, uint64_t *factors, int max_factors)
+int factor_with_pollard(uint64_t n,
+                        uint64_t *factors,
+                        int max_factors,
+                        const struct OptimizationContext *opt)
 {
-    return factor_with_sqrt(n, factors, max_factors);
+    return factor_with_sqrt(n, factors, max_factors, opt);
 }
 
 int factor_number(uint64_t n,
@@ -152,7 +222,12 @@ int factor_number(uint64_t n,
                   const struct OptimizationContext *opt)
 {
     static const struct OptimizationContext default_opt = {
-        .USE_SIEVE = 0
+        .USE_SIEVE = false,
+        .USE_SIMD = false,
+        .USE_MULTITHREADING = false,
+        .USE_GPU = false,
+        .USE_BENCHMARKING = false,
+        .cancel_flag = NULL
     };
 
     if (opt == NULL)
@@ -161,19 +236,19 @@ int factor_number(uint64_t n,
     switch (method)
     {
     case FACTOR_METHOD_TRIAL:
-        return factor_with_trial(n, factors, max_factors, opt->USE_SIEVE);
+        return factor_with_trial(n, factors, max_factors, opt->USE_SIEVE, opt);
 
     case FACTOR_METHOD_SQRT:
-        return factor_with_sqrt(n, factors, max_factors);
+        return factor_with_sqrt(n, factors, max_factors, opt);
 
     case FACTOR_METHOD_WHEEL:
-        return factor_with_wheel(n, factors, max_factors);
+        return factor_with_wheel(n, factors, max_factors, opt);
 
     case FACTOR_METHOD_FERMAT:
-        return factor_with_fermat(n, factors, max_factors);
+        return factor_with_fermat(n, factors, max_factors, opt);
 
     case FACTOR_METHOD_POLLARD:
-        return factor_with_pollard(n, factors, max_factors);
+        return factor_with_pollard(n, factors, max_factors, opt);
 
     default:
         return 0;

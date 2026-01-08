@@ -19,10 +19,30 @@ int factor_number(uint64_t n,
                   int max_factors,
                   const struct OptimizationContext *opt);
 
-int factor_with_trial(uint64_t n, uint64_t *factors, int max_factors, bool use_sieve);
-int factor_with_sqrt(uint64_t n, uint64_t *factors, int max_factors);
-int factor_with_wheel(uint64_t n, uint64_t *factors, int max_factors);
-int factor_with_fermat(uint64_t n, uint64_t *factors, int max_factors);
-int factor_with_pollard(uint64_t n, uint64_t *factors, int max_factors);
+int factor_with_trial(uint64_t n,
+                      uint64_t *factors,
+                      int max_factors,
+                      bool use_sieve,
+                      const struct OptimizationContext *opt);
+
+int factor_with_sqrt(uint64_t n,
+                     uint64_t *factors,
+                     int max_factors,
+                     const struct OptimizationContext *opt);
+
+int factor_with_wheel(uint64_t n,
+                      uint64_t *factors,
+                      int max_factors,
+                      const struct OptimizationContext *opt);
+
+int factor_with_fermat(uint64_t n,
+                       uint64_t *factors,
+                       int max_factors,
+                       const struct OptimizationContext *opt);
+
+int factor_with_pollard(uint64_t n,
+                        uint64_t *factors,
+                        int max_factors,
+                        const struct OptimizationContext *opt);
 
 #endif

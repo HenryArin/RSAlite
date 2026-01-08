@@ -4,10 +4,13 @@
 #include <errno.h>
 #include <time.h>
 #include <glib.h>
+#include <string.h>
 
 #include "factor.h"
 #include "prime.h"
 #include "optimization.h"
+
+typedef struct BenchmarkJob BenchmarkJob;
 
 typedef struct
 {
@@ -17,6 +20,7 @@ typedef struct
 
     GtkWidget *factor_button;
     GtkWidget *clear_button;
+    GtkWidget *cancel_button;
 
     GtkWidget *trial_button;
     GtkWidget *sqrt_button;
@@ -29,11 +33,13 @@ typedef struct
 
     GtkWidget *spinner;
 
+    BenchmarkJob *current_job;
+
     FactorMethod method;
     struct OptimizationContext opt;
 } AppWidgets;
 
-typedef struct
+struct BenchmarkJob
 {
     uint64_t n;
     FactorMethod method;
@@ -43,8 +49,10 @@ typedef struct
     int count;
     double elapsed;
 
+    volatile gboolean cancel_requested;
+
     AppWidgets *app;
-} BenchmarkJob;
+};
 
 static double now_seconds(void)
 {
@@ -61,14 +69,21 @@ static gboolean benchmark_finish_cb(gpointer data)
     GtkTextBuffer *buffer =
         gtk_text_view_get_buffer(GTK_TEXT_VIEW(w->result_view));
 
+    if (job->cancel_requested)
+    {
+        gtk_text_buffer_set_text(buffer, "Operation cancelled.\n", -1);
+        goto cleanup;
+    }
+
     GString *out = g_string_new(NULL);
 
     const char *method_name =
-        (job->method == FACTOR_METHOD_TRIAL) ? "Trial Division" : (job->method == FACTOR_METHOD_SQRT)  ? "Square Root"
-                                                              : (job->method == FACTOR_METHOD_WHEEL)   ? "Wheel Factorization"
-                                                              : (job->method == FACTOR_METHOD_FERMAT)  ? "Fermat"
-                                                              : (job->method == FACTOR_METHOD_POLLARD) ? "Pollard"
-                                                                                                       : "Other";
+        (job->method == FACTOR_METHOD_TRIAL) ? "Trial Division"
+        : (job->method == FACTOR_METHOD_SQRT) ? "Square Root"
+        : (job->method == FACTOR_METHOD_WHEEL) ? "Wheel Factorization"
+        : (job->method == FACTOR_METHOD_FERMAT) ? "Fermat"
+        : (job->method == FACTOR_METHOD_POLLARD) ? "Pollard"
+        : "Other";
 
     if (job->opt.USE_BENCHMARKING)
     {
@@ -99,6 +114,7 @@ static gboolean benchmark_finish_cb(gpointer data)
     gtk_text_buffer_set_text(buffer, out->str, -1);
     g_string_free(out, TRUE);
 
+cleanup:
     gtk_widget_set_sensitive(w->factor_button, TRUE);
     gtk_widget_set_sensitive(w->clear_button, TRUE);
     gtk_widget_set_sensitive(w->entry, TRUE);
@@ -115,8 +131,12 @@ static gboolean benchmark_finish_cb(gpointer data)
     gtk_spinner_stop(GTK_SPINNER(w->spinner));
     gtk_widget_set_visible(w->spinner, FALSE);
 
-    g_free(job);
+    gtk_widget_set_visible(w->cancel_button, FALSE);
+    gtk_widget_set_sensitive(w->cancel_button, TRUE);
 
+    w->current_job = NULL;
+
+    g_free(job);
     return G_SOURCE_REMOVE;
 }
 
@@ -125,14 +145,18 @@ static gpointer benchmark_worker(gpointer data)
     BenchmarkJob *job = data;
 
     double start = now_seconds();
-    job->count = factor_number(
-        job->n,
-        job->method,
-        job->factors,
-        64,
-        &job->opt);
-    double end = now_seconds();
 
+    if (!job->cancel_requested)
+    {
+        job->count = factor_number(
+            job->n,
+            job->method,
+            job->factors,
+            64,
+            &job->opt);
+    }
+
+    double end = now_seconds();
     job->elapsed = end - start;
 
     g_idle_add(benchmark_finish_cb, job);
@@ -192,6 +216,11 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
     job->method = w->method;
     job->opt = w->opt;
     job->app = w;
+    job->cancel_requested = FALSE;
+    job->opt.cancel_flag = &job->cancel_requested;
+
+
+    w->current_job = job;
 
     gtk_text_buffer_set_text(
         buffer,
@@ -211,6 +240,9 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
     gtk_widget_set_sensitive(w->sieve_button, FALSE);
     gtk_widget_set_sensitive(w->benchmark_button, FALSE);
 
+    gtk_widget_set_visible(w->cancel_button, TRUE);
+    gtk_widget_set_sensitive(w->cancel_button, TRUE);
+
     gtk_spinner_start(GTK_SPINNER(w->spinner));
     gtk_widget_set_visible(w->spinner, TRUE);
 
@@ -224,6 +256,17 @@ static void on_clear_clicked(GtkButton *button, gpointer user_data)
     gtk_text_buffer_set_text(
         gtk_text_view_get_buffer(GTK_TEXT_VIEW(w->result_view)),
         "", -1);
+}
+
+static void on_cancel_clicked(GtkButton *button, gpointer user_data)
+{
+    AppWidgets *w = user_data;
+
+    if (w->current_job)
+    {
+        w->current_job->cancel_requested = TRUE;
+        gtk_widget_set_sensitive(w->cancel_button, FALSE);
+    }
 }
 
 static void on_quit_clicked(GtkButton *button, gpointer user_data)
@@ -309,6 +352,7 @@ static void on_activate(GtkApplication *app, gpointer user_data)
 
     w->factor_button = GTK_WIDGET(gtk_builder_get_object(builder, "factor_button"));
     w->clear_button = GTK_WIDGET(gtk_builder_get_object(builder, "clear_button"));
+    w->cancel_button = GTK_WIDGET(gtk_builder_get_object(builder, "cancel_button"));
 
     GtkWidget *quit_button = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
 
@@ -323,8 +367,10 @@ static void on_activate(GtkApplication *app, gpointer user_data)
 
     w->method = FACTOR_METHOD_TRIAL;
 
-    w->opt.USE_SIEVE = false;
-    w->opt.USE_BENCHMARKING = false;
+    w->opt.USE_SIEVE = FALSE;
+    w->opt.USE_BENCHMARKING = FALSE;
+    w->opt.cancel_flag = NULL;
+
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->sieve_button), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->benchmark_button), FALSE);
@@ -339,6 +385,8 @@ static void on_activate(GtkApplication *app, gpointer user_data)
                      G_CALLBACK(on_factor_clicked), w);
     g_signal_connect(w->clear_button, "clicked",
                      G_CALLBACK(on_clear_clicked), w);
+    g_signal_connect(w->cancel_button, "clicked",
+                     G_CALLBACK(on_cancel_clicked), w);
     g_signal_connect(quit_button, "clicked",
                      G_CALLBACK(on_quit_clicked), w);
 
@@ -361,9 +409,13 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     gtk_window_set_application(GTK_WINDOW(window), app);
 
     w->spinner = GTK_WIDGET(gtk_builder_get_object(builder, "progress_spinner"));
-    gtk_widget_set_visible(w->spinner, FALSE);
+    
 
     gtk_widget_show_all(window);
+
+    gtk_widget_set_visible(w->spinner, FALSE);
+    gtk_widget_set_visible(w->cancel_button, FALSE);
+
     g_object_unref(builder);
 }
 

@@ -36,9 +36,36 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSpinner" id="progress_spinner">
+          <object class="GtkBox" id="spinner_box">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="orientation">horizontal</property>
+            <property name="spacing">12</property>
+            <property name="halign">center</property>
+            <child>
+              <object class="GtkSpinner" id="progress_spinner">
+                <property name="visible">False</property>
+                <property name="can-focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="cancel_button">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">False</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="left-attach">0</property>
