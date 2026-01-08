@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #include "factor.h"
 #include "prime.h"
@@ -9,12 +11,12 @@
 #define MAX_N 10000
 #define PROGRESS_STEP 1000
 
-static int is_prime_ref(int n)
+static int is_prime_ref(uint64_t n)
 {
     if (n < 2)
         return 0;
 
-    for (int i = 2; i * i <= n; i++)
+    for (uint64_t i = 2; i * i <= n; i++)
     {
         if (n % i == 0)
             return 0;
@@ -22,11 +24,11 @@ static int is_prime_ref(int n)
     return 1;
 }
 
-static int reference_factors(int n, int *out, int max)
+static int reference_factors(uint64_t n, uint64_t *out, int max)
 {
     int count = 0;
 
-    for (int p = 2; p <= n; p++)
+    for (uint64_t p = 2; p <= n; p++)
     {
         if (!is_prime_ref(p))
             continue;
@@ -35,7 +37,9 @@ static int reference_factors(int n, int *out, int max)
         {
             if (count >= max)
             {
-                fprintf(stderr, "Reference factor overflow for n=%d\n", n);
+                fprintf(stderr,
+                        "Reference factor overflow for n=%" PRIu64 "\n",
+                        n);
                 assert(0);
             }
             out[count++] = p;
@@ -44,14 +48,14 @@ static int reference_factors(int n, int *out, int max)
     return count;
 }
 
-static void compare_factors(int n,
-                            const int *expected, int expected_count,
-                            const int *actual, int actual_count,
+static void compare_factors(uint64_t n,
+                            const uint64_t *expected, int expected_count,
+                            const uint64_t *actual, int actual_count,
                             const char *method_name)
 {
     if (expected_count != actual_count)
     {
-        printf("FAIL: n=%d, %s expected %d factors, got %d\n",
+        printf("FAIL: n=%" PRIu64 ", %s expected %d factors, got %d\n",
                n, method_name, expected_count, actual_count);
         assert(0);
     }
@@ -69,21 +73,22 @@ static void compare_factors(int n,
         }
         if (!found)
         {
-            printf("FAIL: n=%d, %s missing factor %d\n",
+            printf("FAIL: n=%" PRIu64 ", %s missing factor %" PRIu64 "\n",
                    n, method_name, expected[i]);
             assert(0);
         }
     }
 }
 
-static void test_number(int n, FactorMethod method, const char *method_name)
+static void test_number(uint64_t n, FactorMethod method, const char *method_name)
 {
-    int expected[MAX_FACTORS];
-    int actual[MAX_FACTORS];
+    uint64_t expected[MAX_FACTORS];
+    uint64_t actual[MAX_FACTORS];
 
     int expected_count = reference_factors(n, expected, MAX_FACTORS);
 
-    printf("calling factor_number: n=%d method=%s\n", n, method_name);
+    printf("calling factor_number: n=%" PRIu64 " method=%s\n",
+           n, method_name);
     fflush(stdout);
 
     int actual_count = factor_number(n, method, actual, MAX_FACTORS, NULL);
@@ -112,13 +117,14 @@ static void run_all_tests(void)
     {
         printf("Testing %s...\n", names[m]);
 
-        for (int n = 2; n <= MAX_N; n++)
+        for (uint64_t n = 2; n <= MAX_N; n++)
         {
             test_number(n, methods[m], names[m]);
 
             if (n % PROGRESS_STEP == 0)
             {
-                printf("  %s: reached n=%d\n", names[m], n);
+                printf("  %s: reached n=%" PRIu64 "\n",
+                       names[m], n);
             }
         }
 

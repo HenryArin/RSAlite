@@ -46,7 +46,7 @@ bench.o: bench.c factor.h prime.h
 
 
 clean:
-	rm -f *.o rsalite rsalite-gui rsalite-bench
+	rm -f *.o rsalite rsalite-gui rsalite-bench test_factor
 
 
 .PHONY: all clean
