@@ -1,7 +1,7 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -std=c11 -g
 
-CLI_OBJS = main.o factor.o prime.o log.o
+CLI_OBJS = main.o factor.o prime.o log.o 
 GUI_OBJS = gui_main.o factor.o prime.o log.o
 BENCH_OBJS = bench.o factor.o prime.o
 
@@ -44,12 +44,19 @@ test: test_factor
 test_factor: test_factor.o factor.o prime.o
 	$(CC) $(CFLAGS) -o test_factor test_factor.o factor.o prime.o
 
+log_test: log_test.o log.o factor.o prime.o
+	$(CC) $(CFLAGS) -o log_test log_test.o log.o factor.o prime.o
+
+log_test.o: log_test.c log.h
+	$(CC) $(CFLAGS) -c log_test.c
+
+
 bench.o: bench.c factor.h prime.h
 	$(CC) $(CFLAGS) -c bench.c
 
 
 clean:
-	rm -f *.o rsalite rsalite-gui rsalite-bench test_factor
+	rm -f *.o rsalite rsalite-gui rsalite-bench test_factor log_test
 
 
 .PHONY: all clean

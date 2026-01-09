@@ -4,7 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
-#include "factor.h"
+
+#include "factor.h"      
 #include "optimization.h"
 
 typedef struct
@@ -25,9 +26,12 @@ void log_add(uint64_t input,
              double elapsed,
              const uint64_t *factors,
              int count);
+
 int log_count(void);
 const LogEntry *log_get(int index);
 void log_clear(void);
 void log_shutdown(void);
+
+int log_export_csv(const char *path);
 
 #endif

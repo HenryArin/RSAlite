@@ -18,3 +18,5 @@ rsalite-gui
 
 # Ignore test factor output
 test_factor 
+
+*.csv

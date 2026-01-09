@@ -1,26 +1,53 @@
 #include "log.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-static LogEntry *entries = NULL;
-static int entry_count = 0;
-static int entry_capacity = 0;
+#define INITIAL_CAPACITY 64
+
+static LogEntry *logs = NULL;
+static int used = 0;
+static int capacity = 0;
 
 void log_init(void)
 {
-    entry_capacity = 64;
-    entry_count = 0;
-    entries = malloc(sizeof(LogEntry) * entry_capacity);
+    capacity = INITIAL_CAPACITY;
+    used = 0;
+    logs = calloc(capacity, sizeof(LogEntry));
+}
+
+void log_shutdown(void)
+{
+    free(logs);
+    logs = NULL;
+    used = capacity = 0;
+}
+
+int log_count(void)
+{
+    return used;
+}
+
+const LogEntry *log_get(int index)
+{
+    if (index < 0 || index >= used)
+        return NULL;
+    return &logs[index];
+}
+
+void log_clear(void)
+{
+    used = 0;
 }
 
 static void ensure_capacity(void)
 {
-    if (entry_count < entry_capacity)
+    if (used < capacity)
         return;
 
-    entry_capacity *= 2;
-    entries = realloc(entries, sizeof(LogEntry) * entry_capacity);
+    capacity *= 2;
+    logs = realloc(logs, capacity * sizeof(LogEntry));
 }
 
 void log_add(uint64_t input,
@@ -32,7 +59,8 @@ void log_add(uint64_t input,
 {
     ensure_capacity();
 
-    LogEntry *e = &entries[entry_count++];
+    LogEntry *e = &logs[used++];
+
     e->timestamp = time(NULL);
     e->input = input;
     e->method = method;
@@ -43,41 +71,45 @@ void log_add(uint64_t input,
     char *p = e->result;
     size_t left = sizeof(e->result);
 
-    for (int i = 0; i < count && left > 1; i++)
+    for (int i = 0; i < count; i++)
     {
-        int written = snprintf(p, left, "%llu%s",
-            (unsigned long long)factors[i],
-            (i < count - 1) ? "×" : "");
+        int n = snprintf(p, left, "%llu",
+                         (unsigned long long)factors[i]);
+        p += n;
+        left -= n;
 
-        if (written < 0 || (size_t)written >= left)
-            break;
-
-        p += written;
-        left -= written;
+        if (i + 1 < count && left > 3)
+        {
+            strcpy(p, " * ");
+            p += 3;
+            left -= 3;
+        }
     }
 }
 
-int log_count(void)
+int log_export_csv(const char *path)
 {
-    return entry_count;
-}
+    FILE *f = fopen(path, "w");
+    if (!f)
+        return -1;
 
-const LogEntry *log_get(int index)
-{
-    if (index < 0 || index >= entry_count)
-        return NULL;
-    return &entries[index];
-}
+    fprintf(f, "timestamp,input,method,use_sieve,benchmarking,elapsed,result\n");
 
-void log_clear(void)
-{
-    entry_count = 0;
-}
+    for (int i = 0; i < used; i++)
+    {
+        LogEntry *e = &logs[i];
 
-void log_shutdown(void)
-{
-    free(entries);
-    entries = NULL;
-    entry_count = 0;
-    entry_capacity = 0;
+        fprintf(f,
+                "%ld,%llu,%d,%d,%d,%.6f,\"%s\"\n",
+                (long)e->timestamp,
+                (unsigned long long)e->input,
+                e->method,
+                e->use_sieve,
+                e->benchmarking,
+                e->elapsed,
+                e->result);
+    }
+
+    fclose(f);
+    return 0;
 }
