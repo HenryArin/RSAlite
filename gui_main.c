@@ -1,11 +1,11 @@
 #include <gtk/gtk.h>
 #include <stdint.h>
 #include <limits.h>
+#include "log.h"
 #include <errno.h>
 #include <time.h>
 #include <glib.h>
 #include <string.h>
-
 #include "factor.h"
 #include "prime.h"
 #include "optimization.h"
@@ -49,7 +49,7 @@ struct BenchmarkJob
     int count;
     double elapsed;
 
-    volatile gboolean cancel_requested;
+    volatile bool cancel_requested;
 
     AppWidgets *app;
 };
@@ -78,12 +78,12 @@ static gboolean benchmark_finish_cb(gpointer data)
     GString *out = g_string_new(NULL);
 
     const char *method_name =
-        (job->method == FACTOR_METHOD_TRIAL) ? "Trial Division"
-        : (job->method == FACTOR_METHOD_SQRT) ? "Square Root"
-        : (job->method == FACTOR_METHOD_WHEEL) ? "Wheel Factorization"
-        : (job->method == FACTOR_METHOD_FERMAT) ? "Fermat"
+        (job->method == FACTOR_METHOD_TRIAL)     ? "Trial Division"
+        : (job->method == FACTOR_METHOD_SQRT)    ? "Square Root"
+        : (job->method == FACTOR_METHOD_WHEEL)   ? "Wheel Factorization"
+        : (job->method == FACTOR_METHOD_FERMAT)  ? "Fermat"
         : (job->method == FACTOR_METHOD_POLLARD) ? "Pollard"
-        : "Other";
+                                                 : "Other";
 
     if (job->opt.USE_BENCHMARKING)
     {
@@ -113,6 +113,18 @@ static gboolean benchmark_finish_cb(gpointer data)
 
     gtk_text_buffer_set_text(buffer, out->str, -1);
     g_string_free(out, TRUE);
+
+    if (!job->cancel_requested)
+    {
+        log_add(job->n,
+                job->method,
+                &job->opt,
+                job->elapsed,
+                job->factors,
+                job->count);
+    }
+
+    printf("Log entries: %d\n", log_count());
 
 cleanup:
     gtk_widget_set_sensitive(w->factor_button, TRUE);
@@ -218,7 +230,6 @@ static void on_factor_clicked(GtkButton *button, gpointer user_data)
     job->app = w;
     job->cancel_requested = FALSE;
     job->opt.cancel_flag = &job->cancel_requested;
-
 
     w->current_job = job;
 
@@ -371,7 +382,6 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     w->opt.USE_BENCHMARKING = FALSE;
     w->opt.cancel_flag = NULL;
 
-
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->sieve_button), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(w->benchmark_button), FALSE);
 
@@ -409,7 +419,6 @@ static void on_activate(GtkApplication *app, gpointer user_data)
     gtk_window_set_application(GTK_WINDOW(window), app);
 
     w->spinner = GTK_WIDGET(gtk_builder_get_object(builder, "progress_spinner"));
-    
 
     gtk_widget_show_all(window);
 
@@ -421,12 +430,16 @@ static void on_activate(GtkApplication *app, gpointer user_data)
 
 int main(int argc, char **argv)
 {
+    log_init();
+
     GtkApplication *app =
         gtk_application_new("com.henry.RSAlite", G_APPLICATION_DEFAULT_FLAGS);
 
     g_signal_connect(app, "activate", G_CALLBACK(on_activate), NULL);
 
     int status = g_application_run(G_APPLICATION(app), argc, argv);
+
     g_object_unref(app);
+    log_shutdown();
     return status;
 }

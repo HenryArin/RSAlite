@@ -5,7 +5,8 @@
 #include <stdint.h>
 #include "optimization.h"
 
-typedef enum {
+typedef enum
+{
     FACTOR_METHOD_TRIAL,
     FACTOR_METHOD_SQRT,
     FACTOR_METHOD_WHEEL,

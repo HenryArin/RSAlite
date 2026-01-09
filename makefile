@@ -1,8 +1,8 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -std=c11 -g
 
-CLI_OBJS = main.o factor.o prime.o
-GUI_OBJS = gui_main.o factor.o prime.o
+CLI_OBJS = main.o factor.o prime.o log.o
+GUI_OBJS = gui_main.o factor.o prime.o log.o
 BENCH_OBJS = bench.o factor.o prime.o
 
 
@@ -26,6 +26,9 @@ prime.o: prime.c prime.h
 
 test_factor.o: test_factor.c factor.h prime.h
 	$(CC) $(CFLAGS) -c test_factor.c
+
+log.o: log.c log.h
+	$(CC) $(CFLAGS) -c log.c
 
 GTK_CFLAGS := $(shell pkg-config --cflags gtk+-3.0 2>/dev/null)
 GTK_LIBS   := $(shell pkg-config --libs gtk+-3.0 2>/dev/null)
